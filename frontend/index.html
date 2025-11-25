@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Smart Complaint Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg: #0f172a;
+            --bg-soft: #111827;
+            --accent: #22c55e;
+            --accent-soft: rgba(34, 197, 94, 0.15);
+            --accent-strong: #16a34a;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --border: #1f2937;
+            --danger: #f97373;
+            --warning: #facc15;
+            --success: #4ade80;
+            --card-radius: 16px;
+            --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #1f2937 0, #020617 55%, #000 100%);
+            color: var(--text);
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 1200px;
+            background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent 55%),
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.09), transparent 55%),
+                var(--bg-soft);
+            border-radius: 24px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 24px 24px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-shell::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.3;
+            background:
+                linear-gradient(120deg, rgba(148, 163, 184, 0.16), transparent 60%),
+                linear-gradient(300deg, rgba(45, 212, 191, 0.18), transparent 65%);
+            mix-blend-mode: screen;
+        }
+
+        .app-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .title-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .eyebrow {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--accent);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .eyebrow-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--accent);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.85);
+        }
+
+        h1 {
+            font-size: clamp(22px, 3vw, 26px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h1 span.icon {
+            font-size: 24px;
+            filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.5));
+        }
+
+        header p {
+            font-size: 13px;
+            color: var(--muted);
+            max-width: 520px;
+        }
+
+        .admin-toggle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 14px;
+            border: 1px dashed rgba(148, 163, 184, 0.7);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            font-size: 12px;
+            color: var(--muted);
+            max-width: 280px;
+        }
+
+        .admin-hint {
+            font-size: 11px;
+            opacity: 0.75;
+            text-align: right;
+        }
+
+        .filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filter-tabs {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 4px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            backdrop-filter: blur(12px);
+        }
+
+        .filter-tab {
+            border: none;
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 12px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.16s ease, color 0.16s ease, transform 0.12s ease;
+        }
+
+        .filter-tab span.dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            opacity: 0.7;
+        }
+
+        .filter-tab[data-type="All"] span.dot {
+            background: #a855f7;
+        }
+
+        .filter-tab[data-type="Road"] span.dot {
+            background: #f97316;
+        }
+
+        .filter-tab[data-type="Street Light"] span.dot {
+            background: #fde047;
+        }
+
+        .filter-tab[data-type="Water"] span.dot {
+            background: #38bdf8;
+        }
+
+        .filter-tab[data-type="Garbage"] span.dot {
+            background: #22c55e;
+        }
+
+        .filter-tab[data-type="Other"] span.dot {
+            background: #e5e7eb;
+        }
+
+        .filter-tab.active {
+            background: rgba(248, 250, 252, 0.12);
+            color: #f9fafb;
+            transform: translateY(-1px);
+        }
+
+        .filter-tab.active span.dot {
+            box-shadow: 0 0 10px currentColor;
+            opacity: 1;
+        }
+
+        .results-count {
+            font-size: 12px;
+            color: var(--muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(55, 65, 81, 0.8);
+        }
+
+        .results-count strong {
+            color: #e5e7eb;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.6fr);
+            gap: 18px;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .admin-toggle {
+                align-items: flex-start;
+                max-width: 100%;
+            }
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.88);
+            border-radius: var(--card-radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.18), transparent 60%);
+            opacity: 0.6;
+            mix-blend-mode: soft-light;
+            pointer-events: none;
+        }
+
+        .card-inner {
+            position: relative;
+            padding: 16px 16px 14px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .card-header h2 {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-soft {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            color: var(--muted);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-size: 12px;
+            color: #cbd5f5;
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        label span.optional {
+            color: var(--muted);
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px 9px;
+            border-radius: 9px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            background: rgba(15, 23, 42, 0.95);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            transition: border 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        textarea {
+            min-height: 70px;
+            resize: vertical;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: rgba(148, 163, 184, 0.8);
+            font-size: 12px;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
+            background: rgba(15, 23, 42, 1);
+        }
+
+        .location-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .location-row input {
+            flex: 1;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+        }
+
+        .btn.secondary {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            color: #e5e7eb;
+        }
+
+        .btn.secondary:hover {
+            background: rgba(31, 41, 55, 0.98);
+            transform: translateY(-0.5px);
+        }
+
+        .btn.primary {
+            padding-inline: 18px;
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+            color: #022c22;
+            font-weight: 600;
+            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.55);
+        }
+
+        .btn.primary:hover {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            transform: translateY(-1px);
+            box-shadow: 0 16px 32px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn.primary:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .note {
+            font-size: 11px;
+            color: var(--muted);
+            max-width: 260px;
+        }
+
+        .error {
+            font-size: 11px;
+            color: var(--danger);
+        }
+
+        .success {
+            font-size: 11px;
+            color: var(--success);
+        }
+
+        .list-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 520px;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .list-scroll {
+            overflow: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .list-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .list-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 999px;
+        }
+
+        .list-scroll::-webkit-scrollbar-thumb {
+            background: rgba(55, 65, 81, 0.9);
+            border-radius: 999px;
+        }
+
+        .complaint-card {
+            background: rgba(15, 23, 42, 0.97);
+            border-radius: 14px;
+            border: 1px solid rgba(55, 65, 81, 0.95);
+            padding: 10px 11px 9px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr);
+            gap: 6px 10px;
+            font-size: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .complaint-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.21), transparent 60%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .complaint-main,
+        .complaint-meta {
+            position: relative;
+            z-index: 1;
+        }
+
+        .complaint-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 3px;
+        }
+
+        .complaint-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.7));
+        }
+
+        .complaint-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #f9fafb;
+        }
+
+        .complaint-type {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .complaint-desc {
+            font-size: 12px;
+            color: #d1d5db;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .complaint-desc span.more {
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .complaint-location {
+            font-size: 11px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .complaint-location span.pin {
+            font-size: 11px;
+        }
+
+        .meta-top {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .status-pending {
+            border-color: rgba(248, 250, 252, 0.16);
+            background: rgba(31, 41, 55, 0.9);
+            color: #e5e7eb;
+        }
+
+        .status-progress {
+            border-color: rgba(250, 204, 21, 0.7);
+            background: rgba(251, 191, 36, 0.12);
+            color: #fde68a;
+        }
+
+        .status-resolved {
+            border-color: rgba(74, 222, 128, 0.8);
+            background: rgba(22, 163, 74, 0.2);
+            color: #bbf7d0;
+        }
+
+        .status-badge span.dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .meta-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .meta-bottom .who {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .meta-bottom .who strong {
+            color: #e5e7eb;
+        }
+
+        .meta-bottom .date {
+            font-size: 11px;
+        }
+
+        .meta-bottom .right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .upvote-btn {
+            border-radius: 999px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            background: rgba(15, 23, 42, 0.9);
+            padding: 4px 9px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #e5e7eb;
+            cursor: pointer;
+            transition: background 0.16s ease, transform 0.1s ease, border-color 0.16s ease;
+        }
+
+        .upvote-btn span.count {
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: rgba(34, 197, 94, 0.16);
+            border: 1px solid rgba(34, 197, 94, 0.6);
+            font-size: 11px;
+            color: #bbf7d0;
+        }
+
+        .upvote-btn:hover {
+            background: rgba(31, 41, 55, 0.98);
+            transform: translateY(-0.5px);
+            border-color: rgba(75, 85, 99, 1);
+        }
+
+        .upvote-btn:active {
+            transform: translateY(0);
+        }
+
+        .status-toggle {
+            display: none;
+            border-radius: 999px;
+            border: 1px solid rgba(55, 65, 81, 0.95);
+            background: rgba(15, 23, 42, 0.96);
+            font-size: 11px;
+            padding: 3px 7px;
+            color: #e5e7eb;
+            cursor: pointer;
+        }
+
+        body.admin-on .status-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-toggle select {
+            border: none;
+            background: transparent;
+            color: inherit;
+            font-size: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .status-toggle-label {
+            opacity: 0.8;
+        }
+
+        .photo-thumb {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .photo-thumb img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(55, 65, 81, 0.95);
+        }
+
+        .empty-state {
+            padding: 24px 18px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .empty-state span {
+            display: block;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        /* Admin modal */
+
+        .admin-modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .admin-modal[hidden] {
+            display: none;
+        }
+
+        .admin-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-modal-dialog {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            background: #020617;
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            padding: 16px 18px 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+        }
+
+        .admin-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .admin-modal-header h2 {
+            font-size: 15px;
+        }
+
+        .admin-modal-close {
+            border: none;
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 17px;
+        }
+
+        .admin-modal-close:hover {
+            color: #e5e7eb;
+        }
+
+        .admin-modal-sub {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        .admin-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+            color: #cbd5f5;
+            margin-bottom: 8px;
+        }
+
+        .admin-label input {
+            padding: 7px 9px;
+            border-radius: 9px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            background: #020617;
+            color: #e5e7eb;
+            outline: none;
+        }
+
+        .admin-label input:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
+        }
+
+        .admin-login-message {
+            font-size: 11px;
+            margin-top: 6px;
+            min-height: 14px;
+        }
+
+        .admin-login-message.error {
+            color: #f97373;
+        }
+
+        .admin-login-message.success {
+            color: #4ade80;
+        }
+
+        .admin-tips {
+            font-size: 12px;
+            color: #9ca3af;
+            margin: 6px 0 10px;
+            padding-left: 18px;
+        }
+
+        .admin-tips li {
+            margin-bottom: 3px;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 12px;
+            }
+
+            .app-shell {
+                padding: 16px 12px 18px;
+                border-radius: 18px;
+            }
+
+            .complaint-card {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <div class="app-inner">
+            <header>
+                <div class="title-block">
+                    <div class="eyebrow">
+                        <span class="eyebrow-dot"></span>
+                        Section 2 · Smart Complaint Portal
+                    </div>
+                    <h1>
+                        <span class="icon">📣</span>
+                        <span>Report Public Issues in Your Area</span>
+                    </h1>
+                    <p>
+                        Log road, street light, water, garbage and other civic issues in a few clicks.
+                        Nearby residents can upvote complaints so authorities see what matters most.
+                    </p>
+                </div>
+
+                <div class="admin-toggle">
+                    <button class="btn secondary" id="openAdminPanel">
+                        🔐 Admin Panel
+                    </button>
+                    <span class="admin-hint">
+                        Officials tap here, enter password, then update complaint
+                        status (Pending / In Progress / Resolved) from the list.
+                    </span>
+                </div>
+            </header>
+
+            <div class="filters-row">
+                <div class="filter-tabs" id="filterTabs">
+                    <button class="filter-tab active" data-type="All">
+                        <span class="dot"></span> All
+                    </button>
+                    <button class="filter-tab" data-type="Road">
+                        <span class="dot"></span> Road
+                    </button>
+                    <button class="filter-tab" data-type="Street Light">
+                        <span class="dot"></span> Street&nbsp;Light
+                    </button>
+                    <button class="filter-tab" data-type="Water">
+                        <span class="dot"></span> Water
+                    </button>
+                    <button class="filter-tab" data-type="Garbage">
+                        <span class="dot"></span> Garbage
+                    </button>
+                    <button class="filter-tab" data-type="Other">
+                        <span class="dot"></span> Other
+                    </button>
+                </div>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <input id="searchInput" type="text" placeholder="Search title, description or location…"
+                        style="padding:6px 10px; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:12px; min-width:180px;" />
+                    <select id="sortSelect"
+                        style="padding:6px 10px; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:12px;">
+                        <option value="latest">Latest first</option>
+                        <option value="upvotes">Most upvoted</option>
+                        <option value="status">By status</option>
+                    </select>
+
+                    <div class="results-count" id="resultsCount">
+                        Showing <strong>0</strong> complaints
+                    </div>
+                </div>
+            </div>
+
+            <div id="statsBar"
+                style="margin-top:4px; font-size:11px; color:#9ca3af; display:flex; gap:10px; flex-wrap:wrap;">
+            </div>
+
+            <div class="layout">
+                <!-- Lodge Complaint -->
+                <section class="card">
+                    <div class="card-inner">
+                        <div class="card-header">
+                            <h2>
+                                <span>📝</span>
+                                <span>Lodge Complaint</span>
+                            </h2>
+                            <span class="badge-soft">Citizen Form</span>
+                        </div>
+
+                        <form id="complaintForm">
+                            <div class="field-group">
+                                <label for="name">
+                                    <span>Name</span>
+                                    <span class="optional">optional · leave blank for anonymous</span>
+                                </label>
+                                <input type="text" id="name" placeholder="Your name (or leave empty)" />
+                            </div>
+
+                            <div class="field-group">
+                                <label for="issueType">
+                                    <span>Issue Type</span>
+                                    <span>* required</span>
+                                </label>
+                                <select id="issueType" required>
+                                    <option value="">Select issue type…</option>
+                                    <option value="Road">Road</option>
+                                    <option value="Street Light">Street Light</option>
+                                    <option value="Water">Water</option>
+                                    <option value="Garbage">Garbage</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="title">
+                                    <span>Short Title</span>
+                                    <span>* required</span>
+                                </label>
+                                <input type="text" id="title" placeholder="Eg. Deep pothole near main gate" required />
+                            </div>
+
+                            <div class="field-group">
+                                <label for="description">
+                                    <span>Description</span>
+                                    <span>* required</span>
+                                </label>
+                                <textarea id="description" placeholder="Describe the problem clearly…"
+                                    required></textarea>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="location">
+                                    <span>Location</span>
+                                    <span>* required</span>
+                                </label>
+                                <div class="location-row">
+                                    <input type="text" id="location" placeholder="Street / landmark / area" required />
+                                    <button type="button" class="btn secondary" id="useLocationBtn">
+                                        📍 Use My Location
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="photo">
+                                    <span>Photo Upload</span>
+                                    <span class="optional">optional</span>
+                                </label>
+                                <input type="file" id="photo" accept="image/*" />
+                            </div>
+
+                            <div class="form-footer">
+                                <div>
+                                    <div class="note">
+                                        After submitting, you’ll see a success message showing which
+                                        department your complaint is forwarded to.
+                                    </div>
+                                    <div id="formMessage"></div>
+                                </div>
+                                <button type="submit" class="btn primary">
+                                    <span>Submit Complaint</span>
+                                    <span>➜</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Complaints List -->
+                <section class="card">
+                    <div class="card-inner list-shell">
+                        <div class="card-header">
+                            <h2>
+                                <span>📋</span>
+                                <span>Complaints List</span>
+                            </h2>
+                            <span class="badge-soft">Live View</span>
+                        </div>
+
+                        <div class="list-header">
+                            <span>Track issues reported in your area, sorted by latest first.</span>
+                            <span id="upvoteInfo">Upvotes show how many citizens also face the same issue.</span>
+                        </div>
+
+                        <div class="list-scroll" id="complaintsList">
+                            <!-- Complaints render here -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin modal -->
+    <div class="admin-modal" id="adminModal" hidden>
+        <div class="admin-modal-backdrop" id="adminModalBackdrop"></div>
+        <div class="admin-modal-dialog">
+            <div class="admin-modal-header">
+                <h2>Admin Panel</h2>
+                <button class="admin-modal-close" id="closeAdminModal">✕</button>
+            </div>
+            <p class="admin-modal-sub">
+                This secure panel is for municipal staff. After logging in, use the
+                <strong>Status</strong> dropdown on each complaint card to mark it
+                Pending, In Progress or Resolved.
+            </p>
+
+            <div id="adminLoginSection">
+                <label class="admin-label">
+                    Admin password
+                    <input type="password" id="adminPasswordInput" placeholder="Enter admin password" />
+                </label>
+                <button class="btn primary" id="adminLoginBtn">Log in as Admin</button>
+                <div class="admin-login-message" id="adminLoginMessage"></div>
+            </div>
+
+            <div id="adminAfterLogin" hidden>
+                <p class="admin-modal-sub">
+                    ✅ Logged in as admin. You can now change the status of any complaint
+                    directly from the Complaints List.
+                </p>
+                <ul class="admin-tips">
+                    <li>Use the <strong>Status</strong> dropdown visible on each card.</li>
+                    <li>Examples: mark road issues as <em>In Progress</em> when work starts, then
+                        <em>Resolved</em> after completion.
+                    </li>
+                </ul>
+                <button class="btn secondary" id="adminLogoutBtn">Log out</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:5000/api";
+
+        let complaints = [];
+        let currentFilter = "All";
+        let currentSearch = "";
+        let currentSort = "latest";
+        let adminToken = null;
+
+        const form = document.getElementById("complaintForm");
+        const nameInput = document.getElementById("name");
+        const issueTypeInput = document.getElementById("issueType");
+        const titleInput = document.getElementById("title");
+        const descInput = document.getElementById("description");
+        const locationInput = document.getElementById("location");
+        const photoInput = document.getElementById("photo");
+        const formMessage = document.getElementById("formMessage");
+
+        const complaintsListEl = document.getElementById("complaintsList");
+        const filterTabs = document.getElementById("filterTabs");
+        const resultsCount = document.getElementById("resultsCount");
+        const statsBar = document.getElementById("statsBar");
+        const searchInput = document.getElementById("searchInput");
+        const sortSelect = document.getElementById("sortSelect");
+        const useLocationBtn = document.getElementById("useLocationBtn");
+
+        const openAdminPanelBtn = document.getElementById("openAdminPanel");
+        const adminModal = document.getElementById("adminModal");
+        const adminModalBackdrop = document.getElementById("adminModalBackdrop");
+        const closeAdminModalBtn = document.getElementById("closeAdminModal");
+        const adminPasswordInput = document.getElementById("adminPasswordInput");
+        const adminLoginBtn = document.getElementById("adminLoginBtn");
+        const adminLoginMessage = document.getElementById("adminLoginMessage");
+        const adminLoginSection = document.getElementById("adminLoginSection");
+        const adminAfterLogin = document.getElementById("adminAfterLogin");
+        const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
+
+        function formatDate(d) {
+            const date = new Date(d);
+            const day = String(date.getDate()).padStart(2, "0");
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, "0");
+            const mins = String(date.getMinutes()).padStart(2, "0");
+            return `${day}/${month}/${year} • ${hours}:${mins}`;
+        }
+
+        function getIconForType(type) {
+            switch (type) {
+                case "Road": return "🛣️";
+                case "Street Light": return "💡";
+                case "Water": return "💧";
+                case "Garbage": return "🗑️";
+                default: return "⚙️";
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            if (status === "Resolved") return "status-resolved";
+            if (status === "In Progress") return "status-progress";
+            return "status-pending";
+        }
+
+        function getDepartmentForType(type) {
+            switch (type) {
+                case "Road":
+                    return "the Roads & Infrastructure Department";
+                case "Street Light":
+                    return "the Street Lighting & Electricity Department";
+                case "Water":
+                    return "the Water Supply Department";
+                case "Garbage":
+                    return "the Sanitation & Solid Waste Department";
+                default:
+                    return "the Civic Issues Cell";
+            }
+        }
+
+        function showMessage(type, text) {
+            if (!text) {
+                formMessage.textContent = "";
+                formMessage.className = "";
+                return;
+            }
+            formMessage.textContent = text;
+            formMessage.className = type === "error" ? "error" : "success";
+        }
+
+        function updateResultsCount(count) {
+            resultsCount.innerHTML = `Showing <strong>${count}</strong> complaint${count === 1 ? "" : "s"}`;
+        }
+
+        function updateStatsBar(list) {
+            if (!list.length) {
+                statsBar.textContent = "No complaints yet.";
+                return;
+            }
+            const total = list.length;
+            const pending = list.filter(c => c.status === "Pending").length;
+            const progress = list.filter(c => c.status === "In Progress").length;
+            const resolved = list.filter(c => c.status === "Resolved").length;
+
+            statsBar.innerHTML = `
+        <span>Total: <strong>${total}</strong></span>
+        <span>· Pending: <strong>${pending}</strong></span>
+        <span>· In Progress: <strong>${progress}</strong></span>
+        <span>· Resolved: <strong>${resolved}</strong></span>
+      `;
+        }
+
+        function getFilteredSortedComplaints() {
+            let list = complaints.slice();
+
+            list = list.filter(
+                c => currentFilter === "All" || c.issueType === currentFilter
+            );
+
+            if (currentSearch.trim()) {
+                const q = currentSearch.trim().toLowerCase();
+                list = list.filter(c => {
+                    return (
+                        c.title.toLowerCase().includes(q) ||
+                        c.description.toLowerCase().includes(q) ||
+                        (c.location || "").toLowerCase().includes(q)
+                    );
+                });
+            }
+
+            if (currentSort === "latest") {
+                list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            } else if (currentSort === "upvotes") {
+                list.sort((a, b) => (b.upvotes || 0) - (a.upvotes || 0));
+            } else if (currentSort === "status") {
+                const order = { "Pending": 1, "In Progress": 2, "Resolved": 3 };
+                list.sort((a, b) => (order[a.status] || 99) - (order[b.status] || 99));
+            }
+
+            return list;
+        }
+
+        function renderComplaints() {
+            const filtered = getFilteredSortedComplaints();
+            complaintsListEl.innerHTML = "";
+
+            updateResultsCount(filtered.length);
+            updateStatsBar(complaints);
+
+            if (!filtered.length) {
+                complaintsListEl.innerHTML = `
+          <div class="empty-state">
+            <span>✨</span>
+            No complaints match your filters.<br />
+            Try changing type, search query or sort.
+          </div>
+        `;
+                return;
+            }
+
+            for (const c of filtered) {
+                const card = document.createElement("article");
+                card.className = "complaint-card";
+                card.dataset.id = c._id;
+
+                const truncatedDesc =
+                    c.description.length > 130
+                        ? `${escapeHtml(c.description.slice(0, 130))}<span class="more">… more</span>`
+                        : escapeHtml(c.description);
+
+                card.innerHTML = `
+          <div class="complaint-main">
+            <div class="complaint-header">
+              <div class="complaint-icon">${getIconForType(c.issueType)}</div>
+              <div>
+                <div class="complaint-title">${escapeHtml(c.title)}</div>
+                <div class="complaint-type">${escapeHtml(c.issueType)}</div>
+              </div>
+            </div>
+            <div class="complaint-desc">${truncatedDesc}</div>
+            <div class="complaint-location">
+              <span class="pin">📍</span>
+              <span>${escapeHtml(c.location || "Location not specified")}</span>
+            </div>
+            ${c.photoData
+                        ? `<div class="photo-thumb">
+                     <img src="${c.photoData}" alt="Evidence photo" />
+                     <span>Attached photo</span>
+                   </div>`
+                        : ""
+                    }
+          </div>
+
+          <div class="complaint-meta">
+            <div class="meta-top">
+              <span class="status-badge ${getStatusBadgeClass(c.status)}">
+                <span class="dot"></span>
+                <span>${c.status}</span>
+              </span>
+              <div class="status-toggle">
+                <span class="status-toggle-label">Status:</span>
+                <select data-id="${c._id}">
+                  <option value="Pending" ${c.status === "Pending" ? "selected" : ""}>Pending</option>
+                  <option value="In Progress" ${c.status === "In Progress" ? "selected" : ""}>In Progress</option>
+                  <option value="Resolved" ${c.status === "Resolved" ? "selected" : ""}>Resolved</option>
+                </select>
+              </div>
+            </div>
+            <div class="meta-bottom">
+              <div class="who">
+                <span>Reported by <strong>${escapeHtml(c.name || "Anonymous")}</strong></span>
+                <span class="date">${formatDate(c.createdAt)}</span>
+              </div>
+              <div class="right">
+                <button class="upvote-btn" data-id="${c._id}">
+                  <span>👍 I also face this</span>
+                  <span class="count">${c.upvotes || 0}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+                complaintsListEl.appendChild(card);
+            }
+        }
+
+        async function fetchComplaints() {
+            const res = await fetch(`${API_BASE}/complaints`);
+            const data = await res.json();
+            complaints = data;
+            renderComplaints();
+        }
+
+        async function createComplaint(payload) {
+            const res = await fetch(`${API_BASE}/complaints`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message || "Failed to submit complaint");
+            }
+            return res.json();
+        }
+
+        async function upvoteComplaint(id) {
+            const res = await fetch(`${API_BASE}/complaints/${id}/upvote`, {
+                method: "POST",
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message || "Failed to upvote");
+            }
+            return res.json();
+        }
+
+        async function changeStatus(id, status) {
+            if (!adminToken) {
+                throw new Error("Not authorized");
+            }
+            const res = await fetch(`${API_BASE}/complaints/${id}/status`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${adminToken}`,
+                },
+                body: JSON.stringify({ status }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message || "Failed to change status");
+            }
+            return res.json();
+        }
+
+        async function loginAdmin(password) {
+            const res = await fetch(`${API_BASE}/admin/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message || "Invalid admin password");
+            }
+            const data = await res.json();
+            return data.token;
+        }
+
+        let lastSubmitTime = 0;
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            showMessage("", "");
+
+            const now = Date.now();
+            if (now - lastSubmitTime < 5000) {
+                showMessage("error", "Please wait a few seconds before submitting another complaint.");
+                return;
+            }
+
+            if (!issueTypeInput.value) {
+                showMessage("error", "Please select an issue type.");
+                return;
+            }
+            if (!titleInput.value.trim()) {
+                showMessage("error", "Please enter a short title.");
+                return;
+            }
+            if (titleInput.value.trim().length < 5) {
+                showMessage("error", "Title should be at least 5 characters.");
+                return;
+            }
+            if (!descInput.value.trim() || descInput.value.trim().length < 10) {
+                showMessage("error", "Description should be at least 10 characters.");
+                return;
+            }
+            if (!locationInput.value.trim()) {
+                showMessage("error", "Please fill in the location or use 'Use My Location'.");
+                return;
+            }
+
+            const departmentLabel = getDepartmentForType(issueTypeInput.value);
+
+            const payload = {
+                name: nameInput.value.trim(),
+                issueType: issueTypeInput.value,
+                title: titleInput.value.trim(),
+                description: descInput.value.trim(),
+                location: locationInput.value.trim(),
+                photoData: null,
+            };
+
+            const file = photoInput.files[0];
+
+            async function doSubmit(finalPayload) {
+                try {
+                    lastSubmitTime = Date.now();
+                    showMessage("success", "Submitting complaint…");
+                    await createComplaint(finalPayload);
+                    form.reset();
+                    showMessage(
+                        "success",
+                        `Complaint submitted successfully and forwarded to ${departmentLabel}.`
+                    );
+                    await fetchComplaints();
+                    setTimeout(() => showMessage("", ""), 4000);
+                } catch (err) {
+                    showMessage("error", err.message);
+                }
+            }
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    payload.photoData = event.target.result;
+                    await doSubmit(payload);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                await doSubmit(payload);
+            }
+        });
+
+        filterTabs.addEventListener("click", (e) => {
+            const btn = e.target.closest(".filter-tab");
+            if (!btn) return;
+            currentFilter = btn.dataset.type;
+            filterTabs.querySelectorAll(".filter-tab").forEach(t => {
+                t.classList.toggle("active", t === btn);
+            });
+            renderComplaints();
+        });
+
+        searchInput.addEventListener("input", () => {
+            currentSearch = searchInput.value;
+            renderComplaints();
+        });
+
+        sortSelect.addEventListener("change", () => {
+            currentSort = sortSelect.value;
+            renderComplaints();
+        });
+
+        complaintsListEl.addEventListener("click", async (e) => {
+            const btn = e.target.closest(".upvote-btn");
+            if (!btn) return;
+            const id = btn.dataset.id;
+            try {
+                await upvoteComplaint(id);
+                await fetchComplaints();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        complaintsListEl.addEventListener("change", async (e) => {
+            const select = e.target;
+            if (select.tagName.toLowerCase() !== "select") return;
+            const id = select.dataset.id;
+            const newStatus = select.value;
+            try {
+                await changeStatus(id, newStatus);
+                await fetchComplaints();
+            } catch (err) {
+                alert(err.message);
+                await fetchComplaints();
+            }
+        });
+
+        function openAdminModal() {
+            adminModal.hidden = false;
+            adminPasswordInput.focus();
+        }
+
+        function closeAdminModal() {
+            adminModal.hidden = true;
+            adminPasswordInput.value = "";
+            adminLoginMessage.textContent = "";
+            adminLoginMessage.className = "admin-login-message";
+        }
+
+        openAdminPanelBtn.addEventListener("click", () => {
+            openAdminModal();
+        });
+
+        closeAdminModalBtn.addEventListener("click", () => {
+            closeAdminModal();
+        });
+
+        adminModalBackdrop.addEventListener("click", () => {
+            closeAdminModal();
+        });
+
+        adminLoginBtn.addEventListener("click", async () => {
+            const pwd = adminPasswordInput.value.trim();
+            if (!pwd) {
+                adminLoginMessage.textContent = "Please enter the admin password.";
+                adminLoginMessage.className = "admin-login-message error";
+                return;
+            }
+            try {
+                const token = await loginAdmin(pwd);
+                adminToken = token;
+                document.body.classList.add("admin-on");
+                adminLoginMessage.textContent = "Logged in successfully.";
+                adminLoginMessage.className = "admin-login-message success";
+                adminLoginSection.hidden = true;
+                adminAfterLogin.hidden = false;
+            } catch (err) {
+                adminLoginMessage.textContent = err.message;
+                adminLoginMessage.className = "admin-login-message error";
+            }
+        });
+
+        adminLogoutBtn.addEventListener("click", () => {
+            adminToken = null;
+            document.body.classList.remove("admin-on");
+            adminAfterLogin.hidden = true;
+            adminLoginSection.hidden = false;
+            adminPasswordInput.value = "";
+            adminLoginMessage.textContent = "";
+            adminLoginMessage.className = "admin-login-message";
+            closeAdminModal();
+        });
+
+        useLocationBtn.addEventListener("click", () => {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported in this browser.");
+                return;
+            }
+            useLocationBtn.disabled = true;
+            useLocationBtn.textContent = "Getting location…";
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    locationInput.value = `Lat: ${latitude.toFixed(5)}, Long: ${longitude.toFixed(5)}`;
+                    useLocationBtn.disabled = false;
+                    useLocationBtn.textContent = "📍 Use My Location";
+                },
+                () => {
+                    alert("Could not get location. Allow permission or use HTTPS.");
+                    useLocationBtn.disabled = false;
+                    useLocationBtn.textContent = "📍 Use My Location";
+                },
+                { timeout: 8000 }
+            );
+        });
+
+        fetchComplaints().catch(() => {
+            complaintsListEl.innerHTML = `
+        <div class="empty-state">
+          <span>⚠️</span>
+          Could not connect to backend.<br />
+          Make sure Node server is running on <code>http://localhost:5000</code>.
+        </div>
+      `;
+        });
+    </script>
+</body>
+
+</html>
